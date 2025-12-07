@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora IMC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 30px;
+            transition: background-color 0.5s ease;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #0077cc;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #005fa3;
+        }
+
+        #resultado {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        #imagen {
+            margin-top: 20px;
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Calculadora de IMC</h2>
+        <label for="peso">Peso (kg):</label><br>
+        <input type="number" id="peso" required><br>
+
+        <label for="estatura">Estatura (m):</label><br>
+        <input type="number" id="estatura" step="0.01" required><br>
+
+        <button onclick="calcularIMC()">Calcular IMC</button>
+
+        <div id="resultado"></div>
+        <img id="imagen" src="" alt="Resultado IMC">
+    </div>
+
+    <script>
+        function calcularIMC() {
+            const peso = parseFloat(document.getElementById("peso").value);
+            const estatura = parseFloat(document.getElementById("estatura").value);
+
+            if (isNaN(peso) || isNaN(estatura) || estatura <= 0) {
+                alert("Por favor, ingrese valores válidos.");
+                return;
+            }
+
+            const imc = peso / (estatura * estatura);
+            const resultado = document.getElementById("resultado");
+            const imagen = document.getElementById("imagen");
+
+            let mensaje = "";
+            let fondo = "";
+            let imgSrc = "";
+
+            if (imc < 18.5) {
+                mensaje = "Infrapeso";
+                fondo = "#a3d2ca";
+                imgSrc = "infrapeso.png"; // cambia por el nombre real
+            } else if (imc < 25) {
+                mensaje = "Peso normal";
+                fondo = "#bde0fe";
+                imgSrc = "normal.png";
+            } else if (imc < 30) {
+                mensaje = "Sobrepeso";
+                fondo = "#ffdd93";
+                imgSrc = "sobrepeso.png";
+            } else if (imc <= 40) {
+                mensaje = "Obesidad";
+                fondo = "#f4a261";
+                imgSrc = "obesidad.png";
+            } else {
+                mensaje = "Obesidad mórbida";
+                fondo = "#e63946";
+                imgSrc = "obesidadM.png";
+                alert("Tu IMC es mayor a 40. Recomendación: consulta a un médico.");
+            }
+
+            resultado.textContent = `Tu IMC es ${imc.toFixed(2)} → ${mensaje}`;
+            document.body.style.backgroundColor = fondo;
+            imagen.src = imgSrc;
+        }
+    </script>
+</body>
+</html>

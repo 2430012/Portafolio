@@ -1,0 +1,70 @@
+/* styles.css */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f4f4f9;
+    color: #333;
+    padding: 20px;
+}
+
+h1 {
+    color: #007bff; /* Color azul de programador */
+}
+
+#game-board {
+    display: flex;
+    flex-wrap: wrap;
+    width: 600px; /* Tamaño fijo del tablero */
+    margin: 20px 0;
+    gap: 10px; /* Espacio entre cartas */
+}
+
+.card {
+    width: 90px;
+    height: 90px;
+    background-color: #ccc;
+    border: 3px solid #000;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    font-weight: bold;
+    color: transparent; /* Oculta el contenido por defecto */
+    border-radius: 8px;
+    transition: transform 0.3s ease; /* Transición para voltear */
+    user-select: none; /* Previene la selección de texto */
+}
+
+/* Estilo cuando la carta está volteada (mostrando el contenido) */
+.card.flipped {
+    background-color: #fff;
+    color: #333; /* Muestra el contenido */
+    transform: rotateY(180deg);
+}
+
+/* Estilo cuando la carta es una pareja encontrada */
+.card.matched {
+    background-color: #28a745; /* Color verde de éxito */
+    color: white;
+    cursor: default;
+    opacity: 0.8;
+}
+
+/* Estilo para cartas que no se pueden cliquear temporalmente */
+.card.disabled {
+    pointer-events: none;
+}
+
+#reset-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
