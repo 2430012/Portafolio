@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List con LocalStorage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+            background-color: #f9f9f9;
+        }
+
+        h1,
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007BFF;
+            padding-bottom: 5px;
+        }
+
+        form {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #fff;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="datetime-local"] {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        input[type="submit"],
+        button {
+            background: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover,
+        button:hover {
+            background: #0056b3;
+        }
+
+        .complete-btn {
+            background: #28a745;
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        .complete-btn:hover {
+            background: #1e7e34;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            margin-left: 5px;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            background: #fff;
+            margin-bottom: 8px;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #ddd;
+            margin: 30px 0;
+        }
+
+        .overdue {
+            border-left: 4px solid #dc3545;
+            background-color: #fff5f5;
+        }
+
+        .completed {
+            border-left: 4px solid #28a745;
+            background-color: #f0fff4;
+        }
+
+        .pending {
+            border-left: 4px solid #007BFF;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Mi Lista de Tareas (To-Do List) 📝</h1>
+
+    <form id="addTaskForm">
+        <h2>Agregar Nueva Tarea</h2>
+        <label for="task_desc">Tarea:</label>
+        <input type="text" id="task_desc" placeholder="Ej: Comprar leche" required>
+
+        <label for="task_due">Fecha Límite (tiempo determinado):</label>
+        <input type="datetime-local" id="task_due" required>
+
+        <input type="submit" value="Agregar Tarea">
+    </form>
+
+    <hr>
+
+    <div class="lists-container">
+        <div id="pendingSection">
+            <h2>Pendientes ⏳</h2>
+            <ul id="pendingList"></ul>
+        </div>
+
+        <hr>
+
+        <div id="completedSection">
+            <h2>Completadas ✅</h2>
+            <ul id="completedList"></ul>
+        </div>
+
+        <hr>
+
+        <div id="overdueSection">
+            <h2>No Completadas (Vencidas) ❌</h2>
+            <ul id="overdueList"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Clase para manejar las tareas
+        class TodoManager {
+            constructor() {
+                this.tasks = this.loadTasks();
+                this.checkOverdueTasks();
+            }
+
+            // Cargar tareas desde localStorage
+            loadTasks() {
+                const saved = localStorage.getItem('todoTasks');
+                return saved ? JSON.parse(saved) : {
+                    pending: [],
+                    completed: [],
+                    overdue: []
+                };
+            }
+
+            // Guardar tareas en localStorage
+            saveTasks() {
+                localStorage.setItem('todoTasks', JSON.stringify(this.tasks));
+            }
+
+            // Generar ID único
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+
+            // Agregar nueva tarea
+            addTask(description, dueDate) {
+                const task = {
+                    id: this.generateId(),
+                    description: description,
+                    dueTimestamp: new Date(dueDate).getTime(),
+                    createdAt: Date.now()
+                };
+
+                this.tasks.pending.push(task);
+                this.saveTasks();
+                this.render();
+            }
+
+            // Completar tarea
+            completeTask(taskId) {
+                const taskIndex = this.tasks.pending.findIndex(t => t.id === taskId);
+                if (taskIndex !== -1) {
+                    const task = this.tasks.pending.splice(taskIndex, 1)[0];
+                    task.completedAt = Date.now();
+                    this.tasks.completed.push(task);
+                    this.saveTasks();
+                    this.render();
+                }
+            }
+
+            // Eliminar tarea
+            deleteTask(taskId, listType) {
+                const index = this.tasks[listType].findIndex(t => t.id === taskId);
+                if (index !== -1) {
+                    this.tasks[listType].splice(index, 1);
+                    this.saveTasks();
+                    this.render();
+                }
+            }
+
+            // Verificar tareas vencidas
+            checkOverdueTasks() {
+                const now = Date.now();
+                const tasksToMove = [];
+
+                this.tasks.pending = this.tasks.pending.filter(task => {
+                    if (now > task.dueTimestamp) {
+                        task.overdueAt = now;
+                        tasksToMove.push(task);
+                        return false;
+                    }
+                    return true;
+                });
+
+                this.tasks.overdue.push(...tasksToMove);
+                if (tasksToMove.length > 0) {
+                    this.saveTasks();
+                }
+            }
+
+            // Formatear fecha
+            formatDate(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleString('es-MX', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+
+            // Renderizar listas
+            render() {
+                this.renderList('pending', 'pendingList', true);
+                this.renderList('completed', 'completedList', false);
+                this.renderList('overdue', 'overdueList', false);
+            }
+
+            // Renderizar una lista específica
+            renderList(listType, elementId, showCompleteButton) {
+                const ul = document.getElementById(elementId);
+                ul.innerHTML = '';
+
+                if (this.tasks[listType].length === 0) {
+                    ul.innerHTML = '<li class="empty-message">No hay tareas en esta lista.</li>';
+                    return;
+                }
+
+                this.tasks[listType].forEach(task => {
+                    const li = document.createElement('li');
+                    li.className = listType;
+
+                    const taskInfo = document.createElement('div');
+                    taskInfo.className = 'task-info';
+
+                    let dateLabel = '';
+                    let dateValue = '';
+
+                    if (listType === 'pending') {
+                        dateLabel = 'Vence';
+                        dateValue = this.formatDate(task.dueTimestamp);
+                    } else if (listType === 'completed') {
+                        dateLabel = 'Completada';
+                        dateValue = this.formatDate(task.completedAt);
+                    } else if (listType === 'overdue') {
+                        dateLabel = 'Venció';
+                        dateValue = this.formatDate(task.dueTimestamp);
+                    }
+
+                    taskInfo.innerHTML = `<strong>${task.description}</strong><br><small>${dateLabel}: ${dateValue}</small>`;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'task-actions';
+
+                    if (showCompleteButton) {
+                        const completeBtn = document.createElement('button');
+                        completeBtn.textContent = 'Completar';
+                        completeBtn.className = 'complete-btn';
+                        completeBtn.onclick = () => this.completeTask(task.id);
+                        actions.appendChild(completeBtn);
+                    }
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Eliminar';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.onclick = () => this.deleteTask(task.id, listType);
+                    actions.appendChild(deleteBtn);
+
+                    li.appendChild(taskInfo);
+                    li.appendChild(actions);
+                    ul.appendChild(li);
+                });
+            }
+        }
+
+        // Inicializar el gestor de tareas
+        const todoManager = new TodoManager();
+        todoManager.render();
+
+        // Manejar el formulario
+        document.getElementById('addTaskForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const description = document.getElementById('task_desc').value.trim();
+            const dueDate = document.getElementById('task_due').value;
+
+            if (description && dueDate) {
+                todoManager.addTask(description, dueDate);
+
+                // Limpiar formulario
+                document.getElementById('task_desc').value = '';
+                document.getElementById('task_due').value = '';
+            }
+        });
+
+        // Verificar tareas vencidas cada minuto
+        setInterval(() => {
+            todoManager.checkOverdueTasks();
+            todoManager.render();
+        }, 60000);
+    </script>
+
+</body>
+
+</html>
